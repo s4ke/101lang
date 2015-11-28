@@ -1,0 +1,3 @@
+Primarily based on this paper:
+
+https://wiki.haskell.org/wikiupload/c/c6/ICMI45-paper-en.pdf
