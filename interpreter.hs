@@ -1,12 +1,11 @@
 --- (c) Martin Braun, November 2015
---- 101lang is an experimental language
+--- 101lang is an Experimental language
 --- used to learn the basics of programming
 --- language design with Haskell
 ---
 --- License: Apache 2.0
 ---
 --- file: interpreter.hs
-
 module Interpreter where
 
 import Syntax
@@ -75,16 +74,24 @@ pop :: State -> State
 pop state = toState (tail (stack state), tail (index state), output state)
 
 --- pure implementation of the evaluation
-eval                    :: Exp -> State -> Value
-eval (Constant n) state = n
-eval (Variable x) state = findVal x state
-eval (Minus x y) state  = xVal - yVal
+eval                            :: Exp -> State -> Value
+eval (Constant n) state         = n
+eval (Variable x) state         = findVal x state
+eval (Minus x y) state          = binary minus state x y
+eval (Plus x y) state           = binary plus state x y
+eval (Greater x y) state        = binaryBool greater state x y
+eval (Smaller x y) state        = binaryBool smaller state x y
+eval (Equal x y) state          = binaryBool equal state x y
+eval (Times x y) state          = binary times state x y
+eval (Div x y) state            = binary divide state x y
+
+binary :: (Value -> Value -> Value) -> State -> Exp -> Exp -> Value
+binary f state x y = f xVal yVal
         where xVal = eval x state
               yVal = eval y state
-eval (Greater x y) state = if xVal > yVal then 1 else 0
-        where xVal = eval x state
-              yVal = eval y state
-eval (Times x y) state = xVal * yVal
+              
+binaryBool :: (Value -> Value -> Bool) -> State -> Exp -> Exp -> Value
+binaryBool f state x y = if (f xVal yVal) then (NumVal 1) else (NumVal 0)
         where xVal = eval x state
               yVal = eval y state
               
@@ -95,13 +102,13 @@ interpret (Seq s1 s2)     state     = interpret s2 stateAfter1
         where stateAfter1 = interpret s1 state
 interpret (Cond e s1 s2) state      = go (eval e state) s1 s2 state
         where
-            go 1 s1 _ state = interpret s1 state
-            go 0 _ s2 state = interpret s2 state
+            go (NumVal 1) s1 _ state = interpret s1 state
+            go _ _ s2 state = interpret s2 state
 interpret (While e b) state         = go (eval e state) e b state
         where
-            go 1 e b state = interpret (While e b) stateAfterB
+            go (NumVal 1) e b state = interpret (While e b) stateAfterB
                 where stateAfterB = interpret b state
-            go 0 _ _ state = state
+            go _ _ _ state = state
 interpret (Declare name e rest) state = pop stateAfterRest
         where stateAfterRest = interpret rest stateAfterPush
                 where stateAfterPush = push name (eval e state) state
