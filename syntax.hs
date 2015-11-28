@@ -20,13 +20,10 @@ instance Show Value where
 
 class Show a => Ops a where
     minus :: a -> a -> a
-    minus a b = error ("minus is not defined for " ++ (show a) ++ " and " ++ (show b))
     plus :: a -> a -> a
     divide :: a -> a -> a
-    divide a b = error ("divide is not defined for " ++ (show a) ++ " and " ++ (show b))
     times :: a -> a -> a
     greater :: a -> a -> Bool
-    greater a b = error ("greater is not defined for " ++ (show a) ++ " and " ++ (show b))
     smaller :: a -> a -> Bool
     smaller a b = greater b a
     equal :: a -> a -> Bool
