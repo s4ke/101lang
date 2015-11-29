@@ -12,6 +12,7 @@ import Syntax
 import Prelude
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Trans
 import Debug.Trace (trace)
 
 type Location = Int
@@ -86,7 +87,9 @@ instance Monad m => Monad (Op m) where
     e >>= f = Op $ \stack -> do (val1, stack1, str1) <- runOp e stack
                                 (val2, stack2, str2) <- runOp (f val1) stack1
                                 return (val2, stack2, str1 ++ str2)
-
+                                
+instance MonadTrans Op where
+    lift x = Op $ \stack -> fmap (\x -> (x, stack, "")) x
             
 push :: String -> Value -> State -> State
 push name value state = toState (value : (stack state), name : (index state), output state)
