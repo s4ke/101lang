@@ -10,6 +10,8 @@ module Interpreter where
 
 import Syntax
 import Prelude
+import Control.Applicative
+import Control.Monad
 import Debug.Trace (trace)
 
 type Location = Int
@@ -66,6 +68,25 @@ setVal              :: String -> Value -> State -> State
 setVal name value state = setStack state (put pos value (stack state))
         where
             pos = position name (index state)
+            
+--- Our Monad used for evaluation
+newtype Op m a = Op { runOp :: Stack -> m (a, Stack, String) }
+
+instance Monad m => Functor (Op m) where
+    fmap f o = Op $ \stack -> fmap (\(x,stck,str) -> (f x, stck, str)) (runOp o stack)
+
+instance Monad m => Applicative (Op m) where
+    pure x = Op $ \stack -> pure (x, stack, "")
+    Op f <*> Op x = Op $ \stack -> do (y, stack', str1) <- f stack
+                                      (a, stack'', str2) <- x stack'
+                                      return (y a, stack'', str1 ++ str2)
+    
+instance Monad m => Monad (Op m) where
+    return a = Op $ \stack -> return (a, stack, "")
+    e >>= f = Op $ \stack -> do (val1, stack1, str1) <- runOp e stack
+                                (val2, stack2, str2) <- runOp (f val1) stack1
+                                return (val2, stack2, str1 ++ str2)
+
             
 push :: String -> Value -> State -> State
 push name value state = toState (value : (stack state), name : (index state), output state)

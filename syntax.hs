@@ -49,6 +49,8 @@ data Exp = Constant Value
         | Greater Exp Exp
         | Smaller Exp Exp
         | Equal Exp Exp
+        | ReadString
+        | ReadNum
         deriving Show
 
 --- AST for statements
@@ -62,7 +64,3 @@ data Stmt = Assign String Exp
         | Declare String Exp Stmt
         | Print Exp
         deriving Show
-
-
-
-
